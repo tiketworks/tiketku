@@ -10,6 +10,9 @@
             <form method="GET" action="/event_ticketing/public/index.php" style="max-width:480px;">
                 <input type="hidden" name="controller" value="event">
                 <input type="hidden" name="action"     value="index">
+                <?php if (!empty($organizerId)): ?>
+                <input type="hidden" name="organizer"  value="<?= (int) $organizerId ?>">
+                <?php endif; ?>
                 <div class="search-bar">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" style="margin-left:14px;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     <input type="text" name="search" placeholder="Search for events, venues, and organizers..."
@@ -31,6 +34,26 @@
         <?php endif; ?>
     </div>
 
+    <!-- ORGANIZATION FILTER (US-03) -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:20px;">
+        <span style="font-size:0.78rem;font-weight:600;color:var(--muted);">Organization:</span>
+        <?php
+        $chipBase  = 'font-size:0.8rem;font-weight:600;padding:6px 14px;border-radius:999px;text-decoration:none;border:1px solid var(--border);';
+        $chipOn    = $chipBase . 'background:var(--blue-mid);color:#fff;border-color:var(--blue-mid);';
+        $chipOff   = $chipBase . 'background:#fff;color:var(--ink-soft);';
+        $searchTxt = trim($_GET['search'] ?? '');
+        $allQuery  = ['controller' => 'event', 'action' => 'index'];
+        if ($searchTxt !== '') { $allQuery['search'] = $searchTxt; }
+        ?>
+        <a href="?<?= htmlspecialchars(http_build_query($allQuery)) ?>"
+           style="<?= empty($organizerId) ? $chipOn : $chipOff ?>">All</a>
+        <?php foreach ($organizers as $org):
+            $q = $allQuery; $q['organizer'] = $org['id']; ?>
+        <a href="?<?= htmlspecialchars(http_build_query($q)) ?>"
+           style="<?= ((int) $organizerId === (int) $org['id']) ? $chipOn : $chipOff ?>"><?= htmlspecialchars($org['name']) ?></a>
+        <?php endforeach; ?>
+    </div>
+
     <!-- HASIL SEARCH -->
     <?php if (!empty($_GET['search'])): ?>
     <p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px;">
@@ -39,7 +62,7 @@
         <a href="?controller=event&action=index" style="color:var(--blue-mid);font-weight:600;text-decoration:none;">Clear filters ×</a>
     </p>
     <?php else: ?>
-    <p style="font-size:0.85rem;font-weight:600;color:var(--ink-soft);margin-bottom:16px;">All Events <span style="color:var(--muted);font-weight:400;">(<?= count($events) ?>)</span></p>
+    <p style="font-size:0.85rem;font-weight:600;color:var(--ink-soft);margin-bottom:16px;"><?= $selectedOrganizerName ? 'Events by ' . htmlspecialchars($selectedOrganizerName) : 'All Events' ?> <span style="color:var(--muted);font-weight:400;">(<?= count($events) ?>)</span></p>
     <?php endif; ?>
 
     <?php if (empty($events)): ?>

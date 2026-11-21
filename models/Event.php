@@ -19,18 +19,29 @@ class Event {
         $this->conn = $db;
     }
 
-    public function readAll($search = '') {
+    public function readAll($search = '', $organizerId = null) {
         $query = "SELECT e.*, o.name as organizer_name
                   FROM " . $this->table_name . " e
                   LEFT JOIN organizers o ON e.organizer_id = o.id";
+        $where = [];
         if (!empty($search)) {
-            $query .= " WHERE e.name LIKE :search OR e.venue LIKE :search OR o.name LIKE :search";
+            $where[] = "(e.name LIKE :search OR e.venue LIKE :search OR o.name LIKE :search)";
+        }
+        if (!empty($organizerId)) {
+            $where[] = "e.organizer_id = :organizer_id";
+        }
+        if ($where) {
+            $query .= " WHERE " . implode(" AND ", $where);
         }
         $query .= " ORDER BY e.event_date ASC";
         $stmt = $this->conn->prepare($query);
         if (!empty($search)) {
             $like = '%' . $search . '%';
             $stmt->bindParam(':search', $like);
+        }
+        if (!empty($organizerId)) {
+            $organizerId = (int) $organizerId;
+            $stmt->bindParam(':organizer_id', $organizerId, PDO::PARAM_INT);
         }
         $stmt->execute();
         return $stmt;
