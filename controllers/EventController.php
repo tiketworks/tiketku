@@ -22,7 +22,20 @@ class EventController {
 
     public function index() {
         $search = trim($_GET['search'] ?? '');
-        $stmt   = $this->event->readAll($search);
+
+        // Organization filter (US-03): only a positive integer is accepted, anything else is ignored.
+        $organizerId = (isset($_GET['organizer']) && ctype_digit((string) $_GET['organizer']))
+            ? (int) $_GET['organizer'] : 0;
+
+        $organizers = $this->organizer->readAll()->fetchAll(PDO::FETCH_ASSOC);
+        $selectedOrganizerName = null;
+        foreach ($organizers as $o) {
+            if ((int) $o['id'] === $organizerId) {
+                $selectedOrganizerName = $o['name'];
+            }
+        }
+
+        $stmt   = $this->event->readAll($search, $organizerId);
         $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
         require_once __DIR__ . '/../views/events/index.php';
     }
