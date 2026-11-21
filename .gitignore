@@ -1,0 +1,13 @@
+# Credentials (copy config/local.example.php to config/local.php)
+config/local.php
+.env
+
+# User uploads (keep the folder via .gitkeep)
+public/uploads/events/*
+!public/uploads/events/.gitkeep
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
